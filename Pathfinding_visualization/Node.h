@@ -5,4 +5,6 @@ public:
 	int x;
 	int y;
 	bool wall;
+
+	bool hasParent = false;
 };

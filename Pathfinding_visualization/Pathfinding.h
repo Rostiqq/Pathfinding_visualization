@@ -5,5 +5,5 @@
 class Pathfinding
 {
 public:
-	void bfs(Grid& grid);
+	std::vector<Node> bfs(Grid& grid,Node& node);
 };
