@@ -33,7 +33,7 @@ void Grid::drawGrid() const
 				}
 				else
 				{
-					std::cout << "# ";
+					std::cout << "| ";
 				}
 			}
 		}

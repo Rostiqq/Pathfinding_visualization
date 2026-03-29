@@ -5,7 +5,7 @@
 #include "Grid.h"
 #include "Node.h"
 
-std::vector<Node> Pathfinding::bfs(Grid& grid, Node& node)
+std::vector<Node> Pathfinding::bfs(Grid &grid, Node &node)
 {
     std::queue<Node> q;
     std::vector<bool> visited;
@@ -23,8 +23,7 @@ std::vector<Node> Pathfinding::bfs(Grid& grid, Node& node)
     while (!q.empty())
     {
         Node current = q.front();
-       
-       
+
         q.pop();
 
         if (current.x == grid.WIDTH - 1 && current.y == grid.HEIGHT - 1)
@@ -50,7 +49,7 @@ std::vector<Node> Pathfinding::bfs(Grid& grid, Node& node)
     }
     if (found)
     {
-        
+
         std::vector<Node> path;
         while (!(end.x == node.x && end.y == node.y))
         {
@@ -60,10 +59,57 @@ std::vector<Node> Pathfinding::bfs(Grid& grid, Node& node)
         }
         path.push_back(node);
         std::reverse(path.begin(), path.end());
- 
-        std::cout << "BFS finished, path size: " << path.size() << "\n";
+
         return path;
- 
     }
     return {};
+}
+
+void Pathfinding::drawPath(Grid &grid, std::vector<Node> &path, Node &start)
+{
+    for (int y = 0; y < grid.HEIGHT; y++)
+    {
+        for (int x = 0; x < grid.WIDTH; x++)
+        {
+            bool inPath = false;
+            for (const Node &p : path)
+            {
+                if (p.y == y && p.x == x)
+                {
+                    inPath = true;
+                    break;
+                }
+            }
+
+            if (x == start.x && y == start.y)
+            {
+                std::cout << "S ";
+            }
+            else if (x == grid.WIDTH - 1 && y == grid.HEIGHT - 1)
+            {
+                std::cout << "E ";
+            }
+            else if (inPath)
+            {
+                std::cout << "+ ";
+            }
+            else if (grid.isWall(x, y))
+            {
+                std::cout << "| ";
+            }
+            else
+            {
+                std::cout << ". ";
+            }
+        }
+        std::cout << std::endl;
+    }
+    if (path.size() == 0)
+    {
+        std::cout << "Path no found\n";
+    }
+    else
+    {
+        std::cout << "Lenght of path: " << path.size();
+    }
 }
