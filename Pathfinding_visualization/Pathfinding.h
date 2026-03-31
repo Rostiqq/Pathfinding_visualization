@@ -8,4 +8,5 @@ public:
 	std::vector<Node> bfs(Grid &grid, Node &node);
 	std::vector<Node> dfs(Grid &grid, Node &node);
 	void drawPath(Grid &grid, std::vector<Node> &path, Node &Node);
+	std::vector<Node> reconstructPath(Node start, Node end, const std::vector<Node>& parent, int width);
 };

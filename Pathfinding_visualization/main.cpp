@@ -17,10 +17,13 @@ int main()
 	Grid g(columns, row);
 	g.generateGrid();
 	g.drawGrid();
-	std::cout<<std::endl;
+	std::cout << std::endl;
 	p.bfs(g, n);
-	
 
-	auto path = p.bfs(g,n);
-	p.drawPath(g,path,n);
+	auto pathBFS = p.bfs(g, n);
+	p.drawPath(g, pathBFS, n);
+	std::cout << std::endl;
+
+	auto pathDFS = p.dfs(g, n);
+	p.drawPath(g, pathDFS, n);
 }
