@@ -10,20 +10,22 @@ int main()
 	Pathfinding p;
 	Node n{0, 0};
 
-	std::cout << "Size of grid: ";
+	
+	std::cout<<"Size of grid: ";
 	std::cin >> columns >> row;
-	std::cout << std::endl;
 
-	Grid g(columns, row);
+	Grid g(columns,row);
 	g.generateGrid();
-	g.drawGrid();
-	std::cout << std::endl;
-	p.bfs(g, n);
 
-	auto pathBFS = p.bfs(g, n);
+	auto pathBFS = p.bfs(g,n);
+	std::cout<<std::endl;
+	auto pathDFS = p.dfs(g,n);
+	std::cout<<std::endl;
+	auto pathAstar = p.Astar(g,n);
+
 	p.drawPath(g, pathBFS, n);
-	std::cout << std::endl;
-
-	auto pathDFS = p.dfs(g, n);
+	std::cout<<"\n\n";
 	p.drawPath(g, pathDFS, n);
+	std::cout<<"\n\n";
+	p.drawPath(g, pathAstar, n);
 }

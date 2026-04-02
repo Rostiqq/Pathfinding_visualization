@@ -80,7 +80,7 @@ bool Grid::isWall(int x, int y) const
 	return grid[y][x] == 1;
 }
 
-int Grid::getNeighbour(Node neighbors[4], Node &node)
+int Grid::getNeighbour(Node neighbors[4], Node &node) const
 {
 	int count = 0;
 	int dx[4] = {1, -1, 0, 0};

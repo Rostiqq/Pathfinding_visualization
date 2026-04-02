@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <queue>
 #include <stack>
+#include <cfloat>
 #include "Pathfinding.h"
 #include "Grid.h"
 #include "Node.h"
@@ -11,10 +12,10 @@ std::vector<Node> Pathfinding::bfs(Grid &grid, Node &node)
     std::queue<Node> q;
     std::vector<bool> visited;
     std::vector<Node> parent;
-
+    int visitedCount = 0;
     visited.resize(grid.HEIGHT * grid.WIDTH, false);
     parent.resize(grid.HEIGHT * grid.WIDTH);
-
+    Node start = node;
     q.push(node);
     int index = node.y * grid.WIDTH + node.x;
     visited[index] = true;
@@ -23,6 +24,7 @@ std::vector<Node> Pathfinding::bfs(Grid &grid, Node &node)
     Node end;
     while (!q.empty())
     {
+        visitedCount++;
         Node current = q.front();
 
         q.pop();
@@ -50,69 +52,56 @@ std::vector<Node> Pathfinding::bfs(Grid &grid, Node &node)
     }
     if (found)
     {
-
-        std::vector<Node> path;
-        while (!(end.x == node.x && end.y == node.y))
-        {
-            path.push_back(end);
-            int index = end.y * grid.WIDTH + end.x;
-            end = parent[index];
-        }
-        path.push_back(node);
-        std::reverse(path.begin(), path.end());
-
-        return path;
+        std::cout << "BFS visited vertex: " << visitedCount << "\n";
+        return reconstructPath(start, end, parent, grid.WIDTH);
     }
     return {};
 }
 
 void Pathfinding::drawPath(Grid &grid, std::vector<Node> &path, Node &start)
 {
+    if (path.size() == 0)
+    {
+        std::cout << "Path not found\n";
+        return;
+    }
+    std::vector<std::vector<bool>> pathGrid(grid.HEIGHT, std::vector<bool>(grid.WIDTH, false));
+    for (const Node &p : path)
+        pathGrid[p.y][p.x] = true;
+
     for (int y = 0; y < grid.HEIGHT; y++)
     {
         for (int x = 0; x < grid.WIDTH; x++)
         {
-            bool inPath = false;
-            for (const Node &p : path)
-            {
-                if (p.y == y && p.x == x)
-                {
-                    inPath = true;
-                    break;
-                }
-            }
-
             if (x == start.x && y == start.y)
-            {
                 std::cout << "S ";
-            }
             else if (x == grid.WIDTH - 1 && y == grid.HEIGHT - 1)
-            {
                 std::cout << "E ";
-            }
-            else if (inPath)
-            {
+            else if (pathGrid[y][x])
                 std::cout << "+ ";
-            }
             else if (grid.isWall(x, y))
-            {
                 std::cout << "| ";
-            }
             else
-            {
                 std::cout << ". ";
-            }
         }
         std::cout << std::endl;
     }
-    if (path.size() == 0)
+}
+
+std::vector<Node> Pathfinding::reconstructPath(Node start, Node end, const std::vector<Node> &parent, int width)
+{
+    std::vector<Node> path;
+    Node current = end;
+    while (!(current.x == start.x && current.y == start.y))
     {
-        std::cout << "Path not found\n";
+        path.push_back(current);
+        int index = current.y * width + current.x;
+        current = parent[index];
     }
-    else
-    {
-        std::cout << "Length of path: " << path.size() << "\n";
-    }
+    path.push_back(start);
+    std::reverse(path.begin(), path.end());
+    std::cout << "Lenght of path: " << path.size() << "\n";
+    return path;
 }
 
 std::vector<Node> Pathfinding::dfs(Grid &grid, Node &node)
@@ -120,6 +109,7 @@ std::vector<Node> Pathfinding::dfs(Grid &grid, Node &node)
     std::stack<Node> s;
     std::vector<bool> visited;
     std::vector<Node> parent;
+    int visitedCount = 0;
 
     visited.resize(grid.HEIGHT * grid.WIDTH, false);
     parent.resize(grid.HEIGHT * grid.WIDTH);
@@ -132,6 +122,7 @@ std::vector<Node> Pathfinding::dfs(Grid &grid, Node &node)
     Node end;
     while (!s.empty())
     {
+        visitedCount++;
         Node current = s.top();
         s.pop();
 
@@ -159,31 +150,78 @@ std::vector<Node> Pathfinding::dfs(Grid &grid, Node &node)
     }
     if (found)
     {
-
-        std::vector<Node> path;
-        while (!(end.x == node.x && end.y == node.y))
-        {
-            path.push_back(end);
-            int index = end.y * grid.WIDTH + end.x;
-            end = parent[index];
-        }
-        path.push_back(node);
-        std::reverse(path.begin(), path.end());
-
-        return path;
+        std::cout << "DFS visited vertex: " << visitedCount << std::endl;
+        return Pathfinding::reconstructPath(node, end, parent, grid.WIDTH);
     }
     return {};
 }
 
-std::vector<Node> reconstructPath(Node start, Node end, const std::vector<Node>& parent, int width) {
-    std::vector<Node> path;
-    Node current = end;
-    while (!(current.x == start.x && current.y == start.y)) {
-        path.push_back(current);
-        int index = current.y * width + current.x;
-        current = parent[index];
+std::vector<Node> Pathfinding::Astar(Grid &grid, Node &node)
+{
+    std::priority_queue<Node, std::vector<Node>, Compare> pq;
+
+    Node start = node;
+    Node end;
+    Node foundEnd;
+    end.x = grid.WIDTH - 1;
+    end.y = grid.HEIGHT - 1;
+    int visitedCount = 0;
+
+    std::vector<float> gCost(grid.WIDTH * grid.HEIGHT, FLT_MAX);
+    std::vector<Node> parent;
+    parent.resize(grid.HEIGHT * grid.WIDTH, Node{-1, -1});
+
+    int index = node.y * grid.WIDTH + node.x;
+
+    gCost[index] = 0;
+    node.gCost = 0;
+    node.hCost = float((abs(node.x - end.x)) + abs(node.y - end.y));
+    node.fCost = node.gCost + node.hCost;
+    bool found = false;
+    pq.push(node);
+    while (!pq.empty())
+    {
+        visitedCount++;
+        Node current = pq.top();
+        pq.pop();
+
+        int currentIndex = current.y * grid.WIDTH + current.x;
+
+        if (current.gCost > gCost[currentIndex])
+            continue;
+
+        if (current.x == end.x && current.y == end.y)
+        {
+            found = true;
+            foundEnd = current;
+            break;
+        }
+
+        Node neighbours[4];
+        int n = grid.getNeighbour(neighbours, current);
+        for (int i = 0; i < n; i++)
+        {
+            Node nb = neighbours[i];
+            int nbIndex = nb.y * grid.WIDTH + nb.x;
+
+            float newG = current.gCost + 1;
+
+            if (newG < gCost[nbIndex])
+            {
+                nb.gCost = newG;
+                nb.hCost = float(abs(nb.x - end.x) + abs(nb.y - end.y));
+                nb.fCost = nb.gCost + nb.hCost;
+
+                gCost[nbIndex] = newG;
+                parent[nbIndex] = current;
+                pq.push(nb);
+            }
+        }
     }
-    path.push_back(start);
-    std::reverse(path.begin(), path.end());
-    return path;
+    if (found)
+    {
+        std::cout << "A* visited vertex: " << visitedCount << std::endl;
+        return reconstructPath(start, foundEnd, parent, grid.WIDTH);
+    }
+    return {};
 }
