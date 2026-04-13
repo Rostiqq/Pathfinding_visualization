@@ -7,6 +7,8 @@ enum class State
     Wall,
     Start,
     End,
+    Path,
+    Visiting
 };
 
 class Cell

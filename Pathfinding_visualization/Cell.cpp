@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "Cell.h"
 
-void Cell::setState(State s) 
+void Cell::setState(State s)
 {
     state = s;
     if (state == State::Empty)
@@ -21,4 +21,12 @@ void Cell::setState(State s)
     {
         shape.setFillColor(sf::Color::Blue);
     }
+    else if (state == State::Path)
+    {
+        shape.setFillColor(sf::Color::Green);
+    }
+    else if (state == State::Visiting)
+    {
+        shape.setFillColor(sf::Color::Cyan);
+    };
 }
