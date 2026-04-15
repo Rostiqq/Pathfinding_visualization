@@ -9,15 +9,19 @@
 int main()
 {
 	sf::RenderWindow window;
-	int windowHeight = 400;
-	int windowWidth = 600;
-	int columns;
-	int rows;
+	int windowHeight = 600;
+	int windowWidth = 800;
+	int columns, rows;
+
 	Pathfinding p;
 	Node n{0, 0};
+	Node last = {-1, -1};
+	Node end;
+
 	std::queue<Node> q;
 	std::vector<bool> visited;
 	std::vector<Node> parent;
+
 	bool running = false;
 	sf::Clock clock;
 	float delay = 0.01f;
@@ -28,29 +32,21 @@ int main()
 	Grid g(columns, rows);
 	g.generateGrid();
 
-	float cellSizeX = windowWidth / float(columns);
-	float cellSizeY = windowHeight / float(rows);
-	float cellSize = std::min(cellSizeX, cellSizeY);
+	float cellSize = std::min(windowWidth / float(columns), windowHeight / float(rows));
 
 	window.create(sf::VideoMode(columns * cellSize, rows * cellSize), "PATH", sf::Style::Default);
-	/*
-	auto pathBFS = p.bfs(g, n);
-	std::cout << std::endl;
-	auto pathDFS = p.dfs(g, n);
-	std::cout << std::endl;
-	auto pathAstar = p.Astar(g, n);
 
-	p.drawPath(g, pathBFS, n);
-	std::cout << "\n\n";
-	p.drawPath(g, pathDFS, n);
-	std::cout << "\n\n";
-	p.drawPath(g, pathAstar, n);
-	*/
-	auto pathBFS = p.bfs(g, n);
 	std::vector<std::vector<Cell>> cells;
 	cells.resize(g.HEIGHT, std::vector<Cell>(g.WIDTH));
-	bool showPath = false;
 
+	// Lambda na kontrolu či je uzol start alebo end
+	auto isStartOrEnd = [&](Node node)
+	{
+		return (node.x == 0 && node.y == 0) ||
+			   (node.x == g.WIDTH - 1 && node.y == g.HEIGHT - 1);
+	};
+
+	// Inicializácia buniek
 	for (int y = 0; y < g.HEIGHT; y++)
 	{
 		for (int x = 0; x < g.WIDTH; x++)
@@ -77,6 +73,7 @@ int main()
 		}
 	}
 
+	// Main loop
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -95,58 +92,84 @@ int main()
 				if (event.key.code == sf::Keyboard::Space)
 				{
 					running = true;
-
 					visited.assign(g.WIDTH * g.HEIGHT, false);
-					parent.resize(g.WIDTH * g.HEIGHT);
+					parent.assign(g.WIDTH * g.HEIGHT, {-1, -1});
 
-					while (!q.empty()) q.pop();
-					
+					while (!q.empty())
+						q.pop();
+
 					q.push(n);
-					int index = n.y * g.WIDTH + n.x;
-					visited[index] = true;
-					showPath = false;
+					visited[n.y * g.WIDTH + n.x] = true;
 					break;
+				}
+			case sf::Event::MouseButtonPressed:
+				sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+				int gridX = mousePos.x / cellSize;
+				int gridY = mousePos.y / cellSize;
+
+				if (gridX >= 0 && gridX < g.WIDTH && gridY >= 0 && gridY < g.HEIGHT)
+				{
+					if (!(gridX == 0 && gridY == 0) && !(gridX == g.WIDTH - 1 && gridY == g.HEIGHT - 1))
+					{
+						bool isWallNow = g.changeGridStatus(gridX, gridY);
+						if (isWallNow)
+							cells[gridY][gridX].setState(State::Wall);
+						else
+							cells[gridY][gridX].setState(State::Empty);
+					}
 				}
 			}
 		}
 
-		if (running)
+		// BFS animácia
+		if (running && clock.getElapsedTime().asSeconds() >= delay)
 		{
-			if (clock.getElapsedTime().asSeconds() >= delay)
+			clock.restart();
+
+			if (!q.empty())
 			{
-				clock.restart();
-				if (!q.empty())
+				// Označiť posledný uzol ako navštívený
+				if (last.x != -1 && !isStartOrEnd(last))
 				{
-					Node current = q.front();
-					q.pop();
+					cells[last.y][last.x].setState(State::Visited);
+				}
 
-					if (current.x == g.WIDTH - 1 && current.y == g.HEIGHT - 1)
+				Node current = q.front();
+				q.pop();
+
+				// Skontrolovať či sme našli cieľ
+				if (current.x == g.WIDTH - 1 && current.y == g.HEIGHT - 1)
+				{
+					running = false;
+
+					// Vykresliť cestu
+					end = current;
+					while (!(end.x == n.x && end.y == n.y))
 					{
-						running = false;
-
-						Node end = current;
-
-						while (!(end.x == n.x && end.y == n.y))
-						{
-							cells[end.y][end.x].setState(State::Path);
-							int index = end.y * g.WIDTH + end.x;
-							end = parent[index];
-						}
+						cells[end.y][end.x].setState(State::Path);
+						int index = end.y * g.WIDTH + end.x;
+						end = parent[index];
 					}
-
-					if (!(current.x == 0 && current.y == 0) &&
-						!(current.x == g.WIDTH - 1 && current.y == g.HEIGHT - 1))
+					cells[n.y][n.x].setState(State::Start);
+					cells[g.WIDTH - 1][g.HEIGHT - 1].setState(State::End);
+				}
+				else
+				{
+					// Označiť aktuálny uzol ako navštevovaný
+					if (!isStartOrEnd(current))
 					{
 						cells[current.y][current.x].setState(State::Visiting);
 					}
 
+					// Spracovať susedov
 					Node neighbours[4];
-					int couunt = g.getNeighbour(neighbours, current);
+					int count = g.getNeighbour(neighbours, current);
 
-					for (int i = 0; i < couunt; i++)
+					for (int i = 0; i < count; i++)
 					{
 						Node nb = neighbours[i];
 						int nbIndex = nb.y * g.WIDTH + nb.x;
+
 						if (!visited[nbIndex])
 						{
 							visited[nbIndex] = true;
@@ -154,9 +177,13 @@ int main()
 							q.push(nb);
 						}
 					}
+
+					last = current;
 				}
 			}
 		}
+
+		// Rendering
 		window.clear(sf::Color::Black);
 		for (int y = 0; y < g.HEIGHT; y++)
 		{
@@ -167,4 +194,6 @@ int main()
 		}
 		window.display();
 	}
+
+	return 0;
 }

@@ -16,4 +16,5 @@ public:
 	void generateGrid();
 	bool isInside(int x, int y) const;
 	bool isWall(int x, int y) const;
+	bool changeGridStatus(int x, int y);
 };

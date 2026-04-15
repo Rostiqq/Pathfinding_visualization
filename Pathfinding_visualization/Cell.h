@@ -8,7 +8,8 @@ enum class State
     Start,
     End,
     Path,
-    Visiting
+    Visiting,
+    Visited
 };
 
 class Cell

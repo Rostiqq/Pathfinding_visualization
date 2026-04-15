@@ -81,6 +81,8 @@ bool Grid::isWall(int x, int y) const
 }
 
 int Grid::getNeighbour(Node neighbors[4], Node &node) const
+
+
 {
 	int count = 0;
 	int dx[4] = {1, -1, 0, 0};
@@ -99,4 +101,9 @@ int Grid::getNeighbour(Node neighbors[4], Node &node) const
 		neighbors[count++] = Node{nx, ny};
 	}
 	return count;
+}
+
+bool Grid::changeGridStatus(int x, int y) {
+		grid[y][x] = !grid[y][x];
+		return grid[y][x];
 }

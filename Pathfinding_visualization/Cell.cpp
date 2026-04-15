@@ -7,15 +7,15 @@ void Cell::setState(State s)
     state = s;
     if (state == State::Empty)
     {
-        shape.setFillColor(sf::Color::White);
+        shape.setFillColor(sf::Color(20, 20, 20));
     }
     else if (state == State::Wall)
     {
-        shape.setFillColor(sf::Color::Black);
+        shape.setFillColor(sf::Color(10, 10, 10));
     }
     else if (state == State::Start)
     {
-        shape.setFillColor(sf::Color::Green);
+        shape.setFillColor(sf::Color::Blue);
     }
     else if (state == State::End)
     {
@@ -23,10 +23,14 @@ void Cell::setState(State s)
     }
     else if (state == State::Path)
     {
-        shape.setFillColor(sf::Color::Green);
+        shape.setFillColor(sf::Color::White);
     }
     else if (state == State::Visiting)
     {
-        shape.setFillColor(sf::Color::Cyan);
-    };
+        shape.setFillColor(sf::Color::Red);
+    }
+    else if (state == State::Visited)
+    {
+        shape.setFillColor(sf::Color(0, 240, 0)); 
+    }
 }
