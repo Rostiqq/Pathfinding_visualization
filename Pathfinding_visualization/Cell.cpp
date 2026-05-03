@@ -27,10 +27,10 @@ void Cell::setState(State s)
     }
     else if (state == State::Visiting)
     {
-        shape.setFillColor(sf::Color::Red);
+        shape.setFillColor(sf::Color::Yellow);
     }
     else if (state == State::Visited)
     {
-        shape.setFillColor(sf::Color(0, 240, 0)); 
+        shape.setFillColor(sf::Color(0, 145, 255)); 
     }
 }
