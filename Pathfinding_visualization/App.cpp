@@ -22,14 +22,14 @@ App::App(int width, int height) : grid(height, width)
 
     float sizeX = 800.0f / grid.WIDTH;
     float sizeY = 600.0f / grid.HEIGHT;
-    float sizeXY = std::min(sizeX, sizeY);
+    cellSize = std::min(sizeX, sizeY);
 
     for (int y = 0; y < grid.HEIGHT; y++)
     {
         for (int x = 0; x < grid.WIDTH; x++)
         {
-            cells[y][x].shape.setPosition(x * sizeXY, y * sizeXY);
-            cells[y][x].shape.setSize(sf::Vector2f(sizeXY, sizeXY));
+            cells[y][x].shape.setPosition(x * cellSize, y * cellSize);
+            cells[y][x].shape.setSize(sf::Vector2f(cellSize, cellSize));
 
             if (y == start.y && x == start.x)
             {
@@ -58,6 +58,40 @@ void App::handleInput()
     {
         if (event.type == sf::Event::Closed)
             window.close();
+
+        if (event.type == sf::Event::MouseButtonPressed)
+        {
+            if (event.mouseButton.button == sf::Mouse::Left)
+            {
+                int mouseX = event.mouseButton.x;
+                int mouseY = event.mouseButton.y;
+                int cellX = mouseX / cellSize;
+                int cellY = mouseY / cellSize;
+
+                if (cellX >= 0 && cellX < grid.WIDTH &&
+                    cellY >= 0 && cellY < grid.HEIGHT)
+                {
+                    if (!isStartOrEnd({cellX, cellY}))
+                    {
+                        running = false;
+                        reset();
+                        running = true;
+                        startASTAR();
+                        
+                        if (cells[cellY][cellX].state == State::Wall)
+                        {
+                            cells[cellY][cellX].setState(State::Empty);
+                            grid.changeGridStatus(cellX, cellY);
+                        }
+                        else
+                        {
+                            cells[cellY][cellX].setState(State::Wall);
+                            grid.changeGridStatus(cellX, cellY);
+                        }
+                    }
+                }
+            }
+        }
 
         if (event.type == sf::Event::KeyPressed)
         {
@@ -266,10 +300,10 @@ void App::updateAStar()
         Node current = pq.top();
         pq.pop();
         int currentIndex = current.y * grid.WIDTH + current.x;
-        
+
         if (visited[currentIndex])
             return;
-        
+
         visited[currentIndex] = true;
 
         if (last.x != -1 && !isStartOrEnd(last))

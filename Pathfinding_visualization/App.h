@@ -46,6 +46,7 @@ private:
     float gCost;
     float hCost;
     float fCost;
+    float cellSize;
 
     bool running = false;
     bool resetRequest = false;
@@ -56,7 +57,10 @@ private:
                (node.x == end.x && node.y == end.y);
     }
 
-public:
+
+
+
+    public:
     void run();
     App(int width, int height);
     void reset()
